@@ -179,6 +179,7 @@ type VariantParams struct {
 	Captions         string // EXT-X-STREAM-INF only
 	Name             string // EXT-X-STREAM-INF only (non standard Wowza/JWPlayer extension to name the variant/quality in UA)
 	Iframe           bool   // EXT-X-I-FRAME-STREAM-INF
+	Image            bool   // EXT-X-IMAGE-STREAM-INF
 	VideoRange       string
 	HDCPLevel        string
 	FrameRate        float64        // EXT-X-STREAM-INF
@@ -220,12 +221,13 @@ type MediaSegment struct {
 
 // SCTE holds custom, non EXT-X-DATERANGE, SCTE-35 tags
 type SCTE struct {
-	Syntax  SCTE35Syntax  // Syntax defines the format of the SCTE-35 cue tag
-	CueType SCTE35CueType // CueType defines whether the cue is a start, mid, end (if applicable)
-	Cue     string
-	ID      string
-	Time    float64
-	Elapsed float64
+	Syntax      SCTE35Syntax  // Syntax defines the format of the SCTE-35 cue tag
+	CueType     SCTE35CueType // CueType defines whether the cue is a start, mid, end (if applicable)
+	Cue         string
+	ID          string
+	Time        float64
+	Elapsed     float64
+	AdInsertion bool
 }
 
 // Key structure represents information about stream encryption.
@@ -306,6 +308,7 @@ type CustomTag interface {
 	Encode() *bytes.Buffer
 	// String should return the encoded tag as a string.
 	String() string
+	AfterExtInf() bool
 }
 
 // Internal structure for decoding a line of input stream with a list type detection

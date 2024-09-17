@@ -200,6 +200,29 @@ func (p *MasterPlaylist) Encode() *bytes.Buffer {
 				p.buf.WriteRune('"')
 			}
 			p.buf.WriteRune('\n')
+		} else if pl.Image {
+			p.buf.WriteString("#EXT-X-IMAGE-STREAM-INF:BANDWIDTH=")
+			p.buf.WriteString(strconv.FormatUint(uint64(pl.Bandwidth), 10))
+			if pl.Codecs != "" {
+				p.buf.WriteString(",CODECS=\"")
+				p.buf.WriteString(pl.Codecs)
+				p.buf.WriteRune('"')
+			}
+			if pl.Resolution != "" {
+				p.buf.WriteString(",RESOLUTION=") // Resolution should not be quoted
+				p.buf.WriteString(pl.Resolution)
+			}
+			if pl.Video != "" {
+				p.buf.WriteString(",VIDEO=\"")
+				p.buf.WriteString(pl.Video)
+				p.buf.WriteRune('"')
+			}
+			if pl.URI != "" {
+				p.buf.WriteString(",URI=\"")
+				p.buf.WriteString(pl.URI)
+				p.buf.WriteRune('"')
+			}
+			p.buf.WriteRune('\n')
 		} else {
 			p.buf.WriteString("#EXT-X-STREAM-INF:PROGRAM-ID=")
 			p.buf.WriteString(strconv.FormatUint(uint64(pl.ProgramId), 10))
@@ -606,6 +629,10 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 					p.buf.WriteString("#EXT-X-CUE-OUT:")
 					p.buf.WriteString(strconv.FormatFloat(seg.SCTE.Time, 'f', -1, 64))
 					p.buf.WriteRune('\n')
+					if seg.SCTE.AdInsertion {
+						p.buf.WriteString("#EXT-X-CUE-IN")
+						p.buf.WriteRune('\n')
+					}
 				case SCTE35Cue_Mid:
 					p.buf.WriteString("#EXT-X-CUE-OUT-CONT:")
 					p.buf.WriteString("ElapsedTime=")
@@ -680,6 +707,9 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 		// Add Custom Segment Tags here
 		if seg.Custom != nil {
 			for _, v := range seg.Custom {
+				if v.AfterExtInf() {
+					continue
+				}
 				if customBuf := v.Encode(); customBuf != nil {
 					p.buf.WriteString(customBuf.String())
 					p.buf.WriteRune('\n')
@@ -703,6 +733,17 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 		p.buf.WriteRune(',')
 		p.buf.WriteString(seg.Title)
 		p.buf.WriteRune('\n')
+		if seg.Custom != nil {
+			for _, v := range seg.Custom {
+				if !v.AfterExtInf() {
+					continue
+				}
+				if customBuf := v.Encode(); customBuf != nil {
+					p.buf.WriteString(customBuf.String())
+					p.buf.WriteRune('\n')
+				}
+			}
+		}
 		p.buf.WriteString(seg.URI)
 		if p.Args != "" {
 			p.buf.WriteRune('?')

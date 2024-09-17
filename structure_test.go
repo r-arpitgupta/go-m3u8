@@ -1,11 +1,11 @@
 /*
- Playlist structures tests.
+Playlist structures tests.
 
- Copyright 2013-2017 The Project Developers.
- See the AUTHORS and LICENSE files at the top-level directory of this distribution
- and at https://github.com/grafov/m3u8/
+Copyright 2013-2017 The Project Developers.
+See the AUTHORS and LICENSE files at the top-level directory of this distribution
+and at https://github.com/grafov/m3u8/
 
- ॐ तारे तुत्तारे तुरे स्व
+ॐ तारे तुत्तारे तुरे स्व
 */
 package m3u8
 
@@ -39,6 +39,10 @@ func (t *MockCustomTag) TagName() string {
 
 func (t *MockCustomTag) Decode(line string) (CustomTag, error) {
 	return t, t.err
+}
+
+func (t *MockCustomTag) AfterExtInf() bool {
+	return false
 }
 
 func (t *MockCustomTag) Encode() *bytes.Buffer {

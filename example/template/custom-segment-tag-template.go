@@ -49,6 +49,10 @@ func (tag *CustomSegmentTag) Decode(line string) (m3u8.CustomTag, error) {
 	return newTag, err
 }
 
+func (tag *CustomSegmentTag) AfterExtInf() bool {
+	return false
+}
+
 // SegmentTag is a playlist tag example.
 func (tag *CustomSegmentTag) SegmentTag() bool {
 	return true

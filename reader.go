@@ -26,8 +26,8 @@ var reKeyValue = regexp.MustCompile(`([a-zA-Z0-9_-]+)=("[^"]+"|[^",]+)`)
 
 // TimeParse allows globally apply and/or override Time Parser function.
 // Available variants:
-//		* FullTimeParse - implements full featured ISO/IEC 8601:2004
-//		* StrictTimeParse - implements only RFC3339 Nanoseconds format
+//   - FullTimeParse - implements full featured ISO/IEC 8601:2004
+//   - StrictTimeParse - implements only RFC3339 Nanoseconds format
 var TimeParse func(value string) (time.Time, error) = FullTimeParse
 
 // Decode parses a master playlist passed from the buffer. If `strict`
@@ -439,6 +439,30 @@ func decodeLineOfMasterPlaylist(p *MasterPlaylist, state *decodingState, line st
 				state.variant.HDCPLevel = v
 			}
 		}
+	case strings.HasPrefix(line, "#EXT-X-IMAGE-STREAM-INF:"):
+		state.listType = MASTER
+		state.variant = new(Variant)
+		state.variant.Image = true
+		p.Variants = append(p.Variants, state.variant)
+		for k, v := range decodeParamsLine(line[24:]) {
+			switch k {
+			case "URI":
+				state.variant.URI = v
+			case "BANDWIDTH":
+				var val int
+				val, err = strconv.Atoi(v)
+				if strict && err != nil {
+					return err
+				}
+				state.variant.Bandwidth = uint32(val)
+			case "CODECS":
+				state.variant.Codecs = v
+			case "RESOLUTION":
+				state.variant.Resolution = v
+			case "VIDEO":
+				state.variant.Video = v
+			}
+		}
 	case strings.HasPrefix(line, "#"):
 		// comments are ignored
 	}
@@ -717,6 +741,8 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 		if lenLine > 14 {
 			state.scte.Time, _ = strconv.ParseFloat(line[15:], 64)
 		}
+	case state.tagSCTE35 && line == "#EXT-X-CUE-IN":
+		state.scte.AdInsertion = true
 	case !state.tagSCTE35 && line == "#EXT-X-CUE-IN":
 		state.tagSCTE35 = true
 		state.scte = new(SCTE)
