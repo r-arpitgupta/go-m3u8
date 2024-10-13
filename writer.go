@@ -39,7 +39,7 @@ func strver(ver uint8) string {
 // playlist consists of variants.
 func NewMasterPlaylist() *MasterPlaylist {
 	p := new(MasterPlaylist)
-	p.ver = minver
+	// p.ver = minver
 	return p
 }
 
@@ -75,9 +75,12 @@ func (p *MasterPlaylist) Encode() *bytes.Buffer {
 		return &p.buf
 	}
 
-	p.buf.WriteString("#EXTM3U\n#EXT-X-VERSION:")
-	p.buf.WriteString(strver(p.ver))
-	p.buf.WriteRune('\n')
+	p.buf.WriteString("#EXTM3U\n")
+	if p.ver != 0 {
+		p.buf.WriteString("#EXT-X-VERSION:")
+		p.buf.WriteString(strver(p.ver))
+		p.buf.WriteRune('\n')
+	}
 
 	if p.IndependentSegments() {
 		p.buf.WriteString("#EXT-X-INDEPENDENT-SEGMENTS\n")
@@ -160,13 +163,19 @@ func (p *MasterPlaylist) Encode() *bytes.Buffer {
 					p.buf.WriteString(alt.InStreamID)
 					p.buf.WriteRune('"')
 				}
+				if alt.Channels != "" {
+					p.buf.WriteString(",CHANNELS=\"")
+					p.buf.WriteString(alt.Channels)
+					p.buf.WriteRune('"')
+				}
 				p.buf.WriteRune('\n')
 			}
 		}
 		if pl.Iframe {
-			p.buf.WriteString("#EXT-X-I-FRAME-STREAM-INF:PROGRAM-ID=")
-			p.buf.WriteString(strconv.FormatUint(uint64(pl.ProgramId), 10))
-			p.buf.WriteString(",BANDWIDTH=")
+			p.buf.WriteString("#EXT-X-I-FRAME-STREAM-INF:")
+			// p.buf.WriteString("#EXT-X-I-FRAME-STREAM-INF:PROGRAM-ID=")
+			// p.buf.WriteString(strconv.FormatUint(uint64(pl.ProgramId), 10))
+			p.buf.WriteString("BANDWIDTH=")
 			p.buf.WriteString(strconv.FormatUint(uint64(pl.Bandwidth), 10))
 			if pl.AverageBandwidth != 0 {
 				p.buf.WriteString(",AVERAGE-BANDWIDTH=")
@@ -224,9 +233,10 @@ func (p *MasterPlaylist) Encode() *bytes.Buffer {
 			}
 			p.buf.WriteRune('\n')
 		} else {
-			p.buf.WriteString("#EXT-X-STREAM-INF:PROGRAM-ID=")
-			p.buf.WriteString(strconv.FormatUint(uint64(pl.ProgramId), 10))
-			p.buf.WriteString(",BANDWIDTH=")
+			p.buf.WriteString("#EXT-X-STREAM-INF:")
+			// p.buf.WriteString("#EXT-X-STREAM-INF:PROGRAM-ID=")
+			// p.buf.WriteString(strconv.FormatUint(uint64(pl.ProgramId), 10))
+			p.buf.WriteString("BANDWIDTH=")
 			p.buf.WriteString(strconv.FormatUint(uint64(pl.Bandwidth), 10))
 			if pl.AverageBandwidth != 0 {
 				p.buf.WriteString(",AVERAGE-BANDWIDTH=")
@@ -699,8 +709,11 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 		if seg.Limit > 0 {
 			p.buf.WriteString("#EXT-X-BYTERANGE:")
 			p.buf.WriteString(strconv.FormatInt(seg.Limit, 10))
-			p.buf.WriteRune('@')
-			p.buf.WriteString(strconv.FormatInt(seg.Offset, 10))
+			// handle zero offset. 0 offset is applicable only for 1st segment
+			if p.count == count || seg.Offset != 0 {
+				p.buf.WriteRune('@')
+				p.buf.WriteString(strconv.FormatInt(seg.Offset, 10))
+			}
 			p.buf.WriteRune('\n')
 		}
 

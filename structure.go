@@ -199,6 +199,7 @@ type Alternative struct {
 	Characteristics string
 	Subtitles       string
 	InStreamID      string
+	Channels        string
 }
 
 // MediaSegment structure represents a media segment included in a
