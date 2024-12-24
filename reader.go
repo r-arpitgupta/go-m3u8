@@ -478,7 +478,10 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 	var err error
 
 	line = strings.TrimSpace(line)
-
+	// omit empty line
+	if line == "" {
+		return nil
+	}
 	// check for custom tags first to allow custom parsing of existing tags
 	if p.Custom != nil {
 		for _, v := range p.customDecoders {
@@ -564,12 +567,14 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 		}
 		// If EXT-X-KEY appeared before reference to segment (EXTINF) then it linked to this segment
 		if state.tagKey {
-			p.Segments[p.last()].Key = &Key{state.xkey.Method, state.xkey.URI, state.xkey.IV, state.xkey.Keyformat, state.xkey.Keyformatversions}
+			p.Segments[p.last()].Keys = state.xkeys
+			//p.Segments[p.last()].Key = &Key{state.xkey.Method, state.xkey.URI, state.xkey.IV, state.xkey.Keyformat, state.xkey.Keyformatversions}
 			// First EXT-X-KEY may appeared in the header of the playlist and linked to first segment
 			// but for convenient playlist generation it also linked as default playlist key
-			if p.Key == nil {
-				p.Key = state.xkey
+			if len(p.Keys) == 0 {
+				p.Keys = state.xkeys
 			}
+			state.xkeys = nil
 			state.tagKey = false
 		}
 		// If EXT-X-MAP appeared before reference to segment (EXTINF) then it linked to this segment
@@ -647,21 +652,22 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 		}
 	case strings.HasPrefix(line, "#EXT-X-KEY:"):
 		state.listType = MEDIA
-		state.xkey = new(Key)
+		xkey := new(Key)
 		for k, v := range decodeParamsLine(line[11:]) {
 			switch k {
 			case "METHOD":
-				state.xkey.Method = v
+				xkey.Method = v
 			case "URI":
-				state.xkey.URI = v
+				xkey.URI = v
 			case "IV":
-				state.xkey.IV = v
+				xkey.IV = v
 			case "KEYFORMAT":
-				state.xkey.Keyformat = v
+				xkey.Keyformat = v
 			case "KEYFORMATVERSIONS":
-				state.xkey.Keyformatversions = v
+				xkey.Keyformatversions = v
 			}
 		}
+		state.xkeys = append(state.xkeys, xkey)
 		state.tagKey = true
 	case strings.HasPrefix(line, "#EXT-X-MAP:"):
 		state.listType = MEDIA

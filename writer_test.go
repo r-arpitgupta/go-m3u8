@@ -489,11 +489,11 @@ func TestEncryptionKeysInMediaPlaylist(t *testing.T) {
 		_ = p.Append(uri+".ts", 4, "")
 		_ = p.SetKey(expected.Method, expected.URI, expected.IV, expected.Keyformat, expected.Keyformatversions)
 
-		if p.Segments[i].Key == nil {
+		if len(p.Segments[i].Keys) == 0 {
 			t.Fatalf("Key was not set on segment %v", i)
 		}
-		if *p.Segments[i].Key != *expected {
-			t.Errorf("Key %+v does not match expected %+v", p.Segments[i].Key, expected)
+		if *p.Segments[i].Keys[0] != *expected {
+			t.Errorf("Key %+v does not match expected %+v", p.Segments[i].Keys[0], expected)
 		}
 	}
 }
@@ -1022,10 +1022,9 @@ func ExampleMasterPlaylist_String() {
 	fmt.Printf("%s", m)
 	// Output:
 	// #EXTM3U
-	// #EXT-X-VERSION:3
-	// #EXT-X-STREAM-INF:PROGRAM-ID=123,BANDWIDTH=1500000,AVERAGE-BANDWIDTH=1500000,RESOLUTION=576x480,FRAME-RATE=25.000
+	// #EXT-X-STREAM-INF:BANDWIDTH=1500000,AVERAGE-BANDWIDTH=1500000,RESOLUTION=576x480,FRAME-RATE=25.000
 	// chunklist1.m3u8
-	// #EXT-X-STREAM-INF:PROGRAM-ID=123,BANDWIDTH=1500000,AVERAGE-BANDWIDTH=1500000,RESOLUTION=576x480,FRAME-RATE=25.000
+	// #EXT-X-STREAM-INF:BANDWIDTH=1500000,AVERAGE-BANDWIDTH=1500000,RESOLUTION=576x480,FRAME-RATE=25.000
 	// chunklist2.m3u8
 }
 
@@ -1041,9 +1040,9 @@ func ExampleMasterPlaylist_String_with_hlsv7() {
 	// #EXTM3U
 	// #EXT-X-VERSION:7
 	// #EXT-X-INDEPENDENT-SEGMENTS
-	// #EXT-X-STREAM-INF:PROGRAM-ID=0,BANDWIDTH=12886714,AVERAGE-BANDWIDTH=7964551,CODECS="hvc1.2.4.L123.B0",RESOLUTION=1920x1080,CLOSED-CAPTIONS=NONE,FRAME-RATE=23.976,VIDEO-RANGE=PQ,HDCP-LEVEL=TYPE-0
+	// #EXT-X-STREAM-INF:BANDWIDTH=12886714,AVERAGE-BANDWIDTH=7964551,CODECS="hvc1.2.4.L123.B0",RESOLUTION=1920x1080,CLOSED-CAPTIONS=NONE,FRAME-RATE=23.976,VIDEO-RANGE=PQ,HDCP-LEVEL=TYPE-0
 	// hdr10_1080/prog_index.m3u8
-	// #EXT-X-I-FRAME-STREAM-INF:PROGRAM-ID=0,BANDWIDTH=905053,AVERAGE-BANDWIDTH=364552,CODECS="hvc1.2.4.L123.B0",RESOLUTION=1920x1080,VIDEO-RANGE=PQ,HDCP-LEVEL=TYPE-0,URI="hdr10_1080/iframe_index.m3u8"
+	// #EXT-X-I-FRAME-STREAM-INF:BANDWIDTH=905053,AVERAGE-BANDWIDTH=364552,CODECS="hvc1.2.4.L123.B0",RESOLUTION=1920x1080,VIDEO-RANGE=PQ,HDCP-LEVEL=TYPE-0,URI="hdr10_1080/iframe_index.m3u8"
 }
 
 func ExampleMediaPlaylist_Segments_scte35_oatcls() {

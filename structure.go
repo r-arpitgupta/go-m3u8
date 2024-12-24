@@ -125,9 +125,9 @@ type MediaPlaylist struct {
 	count            uint // number of segments added to the playlist
 	buf              bytes.Buffer
 	ver              uint8
-	Key              *Key // EXT-X-KEY is optional encryption key displayed before any segments (default key for the playlist)
-	Map              *Map // EXT-X-MAP is optional tag specifies how to obtain the Media Initialization Section (default map for the playlist)
-	WV               *WV  // Widevine related tags outside of M3U8 specs
+	Keys             []*Key // EXT-X-KEY is optional encryption key displayed before any segments (default key for the playlist)
+	Map              *Map   // EXT-X-MAP is optional tag specifies how to obtain the Media Initialization Section (default map for the playlist)
+	WV               *WV    // Widevine related tags outside of M3U8 specs
 	Custom           map[string]CustomTag
 	customDecoders   []CustomDecoder
 }
@@ -212,7 +212,7 @@ type MediaSegment struct {
 	Duration        float64   // first parameter for EXTINF tag; duration must be integers if protocol version is less than 3 but we are always keep them float
 	Limit           int64     // EXT-X-BYTERANGE <n> is length in bytes for the file under URI
 	Offset          int64     // EXT-X-BYTERANGE [@o] is offset from the start of the file under URI
-	Key             *Key      // EXT-X-KEY displayed before the segment and means changing of encryption key (in theory each segment may have own key)
+	Keys            []*Key    // EXT-X-KEY displayed before the segment and means changing of encryption key (in theory each segment may have own key)
 	Map             *Map      // EXT-X-MAP displayed before the segment
 	Discontinuity   bool      // EXT-X-DISCONTINUITY indicates an encoding discontinuity between the media segment that follows it and the one that preceded it (i.e. file format, number and type of tracks, encoding parameters, encoding sequence, timestamp sequence)
 	SCTE            *SCTE     // SCTE-35 used for Ad signaling in HLS
@@ -333,7 +333,7 @@ type decodingState struct {
 	title              string
 	variant            *Variant
 	alternatives       []*Alternative
-	xkey               *Key
+	xkeys              []*Key
 	xmap               *Map
 	scte               *SCTE
 	custom             map[string]CustomTag
